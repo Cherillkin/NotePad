@@ -15,11 +15,14 @@ type AuthCredentials struct {
 type AuthRepository interface {
 	RegisterUser(ctx context.Context, registerData *AuthCredentials) (*User, error)
 	GetUser(ctx context.Context, query interface{}, args ...interface{}) (*User, error)
+	RegisterUserOAuth(ctx context.Context, user *User) (*User, error)
 }
 
 type AuthService interface {
 	Login(ctx context.Context, loginData *AuthCredentials) (string, *User, error)
 	Register(ctx context.Context, registerData *AuthCredentials) (string, *User, error)
+	GenerateGoogleOAuthUrl(state string) string
+	HandleGoogleCallback(ctx context.Context, code string) (string, *User, error)
 }
 
 func ComparePassword(password, hash string) bool {

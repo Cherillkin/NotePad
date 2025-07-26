@@ -38,6 +38,13 @@ func (r *AuthRepository) GetUser(ctx context.Context, query interface{}, args ..
 	return user, nil
 }
 
+func (r *AuthRepository) RegisterUserOAuth(ctx context.Context, user *models.User) (*models.User, error) {
+	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func NewAuthRepository(db *gorm.DB) models.AuthRepository {
 	return &AuthRepository{
 		db: db,

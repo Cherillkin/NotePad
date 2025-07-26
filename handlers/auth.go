@@ -99,6 +99,44 @@ func (h *AuthHadner) Register(ctx *fiber.Ctx) error {
 	})
 }
 
+func (h *AuthHadner) GoogleLogin(ctx *fiber.Ctx) error {
+	state := "secure-random-state"
+	url := h.service.GenerateGoogleOAuthUrl(state)
+	return ctx.Redirect(url)
+}
+
+func (h *AuthHadner) GoogleCallback(ctx *fiber.Ctx) error {
+	code := ctx.Query("code")
+	if code == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"status":  "fail",
+			"message": "Code not found in callback",
+			"data":    nil,
+		})
+	}
+
+	context, cancel := context.WithTimeout(context.Background(), time.Duration(5*time.Second))
+	defer cancel()
+
+	token, user, err := h.service.HandleGoogleCallback(context, code)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+			"data":    nil,
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"status":  "success",
+		"message": "Logged in with Google",
+		"data": &fiber.Map{
+			"token": token,
+			"user":  user,
+		},
+	})
+}
+
 func NewAuthHandler(router fiber.Router, service models.AuthService) {
 	handler := &AuthHadner{
 		service: service,
@@ -106,5 +144,7 @@ func NewAuthHandler(router fiber.Router, service models.AuthService) {
 
 	router.Post("/login", handler.Login)
 	router.Post("/register", handler.Register)
-	// router.Post("/logout", handler.Logout)
+
+	router.Get("/oauth/google", handler.GoogleLogin)
+	router.Get("/oauth/callback/google", handler.GoogleCallback)
 }

@@ -14,11 +14,25 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	oauth2api "google.golang.org/api/oauth2/v2"
+	"google.golang.org/api/option"
 	"gorm.io/gorm"
 )
 
 type AuthService struct {
 	repository models.AuthRepository
+}
+
+func getGoogleOAuthConfig() *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
+		Endpoint:     google.Endpoint,
+	}
 }
 
 func (s *AuthService) Login(ctx context.Context, loginData *models.AuthCredentials) (string, *models.User, error) {
@@ -91,6 +105,60 @@ func (s *AuthService) Register(ctx context.Context, registerData *models.AuthCre
 	}
 
 	return token, user, nil
+}
+
+func (s *AuthService) GenerateGoogleOAuthUrl(state string) string {
+	conf := getGoogleOAuthConfig()
+	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+}
+
+func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (string, *models.User, error) {
+	conf := getGoogleOAuthConfig()
+
+	token, err := conf.Exchange(ctx, code)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to exchange code for token: %v", err)
+	}
+
+	client := conf.Client(ctx, token)
+	oauth2Service, err := oauth2api.NewService(ctx, option.WithHTTPClient(client))
+
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create oauth2 service: %v", err)
+	}
+
+	userinfo, err := oauth2Service.Userinfo.Get().Do()
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to get userinfo: %v", err)
+	}
+
+	user, err := s.repository.GetUser(ctx, "email = ?", userinfo.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			user = &models.User{
+				Email:   userinfo.Email,
+				Picture: userinfo.Picture,
+			}
+			user, err = s.repository.RegisterUserOAuth(ctx, user)
+			if err != nil {
+				return "", nil, fmt.Errorf("failed to register user: %v", err)
+			}
+		} else {
+			return "", nil, fmt.Errorf("failed to query user: %v", err)
+		}
+	}
+
+	claims := jwt.MapClaims{
+		"id":  user.ID,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
+	}
+
+	jwtToken, err := utils.GenerateJWT(claims, jwt.SigningMethodHS256, os.Getenv("JWT_SECRET"))
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create jwtToken: %v", err)
+	}
+
+	return jwtToken, user, nil
 }
 
 func NewAuthService(repository models.AuthRepository) models.AuthService {
