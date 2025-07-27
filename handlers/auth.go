@@ -11,11 +11,11 @@ import (
 
 var validate = validator.New()
 
-type AuthHadner struct {
+type AuthHandler struct {
 	service models.AuthService
 }
 
-func (h *AuthHadner) Login(ctx *fiber.Ctx) error {
+func (h *AuthHandler) Login(ctx *fiber.Ctx) error {
 	creds := &models.AuthCredentials{}
 
 	context, cancel := context.WithTimeout(context.Background(), time.Duration(5*time.Second))
@@ -57,7 +57,7 @@ func (h *AuthHadner) Login(ctx *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHadner) Register(ctx *fiber.Ctx) error {
+func (h *AuthHandler) Register(ctx *fiber.Ctx) error {
 	creds := &models.AuthCredentials{}
 
 	context, cancel := context.WithTimeout(context.Background(), time.Duration(5*time.Second))
@@ -99,13 +99,13 @@ func (h *AuthHadner) Register(ctx *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHadner) GoogleLogin(ctx *fiber.Ctx) error {
+func (h *AuthHandler) GoogleLogin(ctx *fiber.Ctx) error {
 	state := "secure-random-state"
 	url := h.service.GenerateGoogleOAuthUrl(state)
 	return ctx.Redirect(url)
 }
 
-func (h *AuthHadner) GoogleCallback(ctx *fiber.Ctx) error {
+func (h *AuthHandler) GoogleCallback(ctx *fiber.Ctx) error {
 	code := ctx.Query("code")
 	if code == "" {
 		return ctx.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
@@ -138,7 +138,7 @@ func (h *AuthHadner) GoogleCallback(ctx *fiber.Ctx) error {
 }
 
 func NewAuthHandler(router fiber.Router, service models.AuthService) {
-	handler := &AuthHadner{
+	handler := &AuthHandler{
 		service: service,
 	}
 

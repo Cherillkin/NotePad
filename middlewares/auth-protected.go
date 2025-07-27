@@ -17,7 +17,7 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 
-		if authHeader == " " {
+		if strings.TrimSpace(authHeader) == "" {
 			log.Warnf("empty authorization token")
 
 			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
@@ -56,9 +56,26 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		userId := token.Claims.(jwt.MapClaims)["id"]
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "Unauthorized",
+			})
+		}
 
-		if err := db.Model(models.User{}).Where("id = ?", userId).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		idFloat, ok := claims["id"].(float64)
+		if !ok {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "Unauthorized",
+			})
+		}
+
+		userID := uint(idFloat)
+
+		var user models.User
+		if err := db.Where("id = ?", userID).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warnf("user not found in the db")
 
 			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
@@ -67,7 +84,7 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		c.Locals("userId", userId)
+		c.Locals("userId", userID)
 
 		return c.Next()
 	}
