@@ -20,7 +20,7 @@ type ListRepository interface {
 	GetListsByUserID(ctx context.Context, userID uint) ([]List, error)
 	GetListByID(ctx context.Context, id uint) (*List, error)
 	DeleteList(ctx context.Context, id uint) error
-	UpdateList(ctx context.Context, listData *List) (*List, error)
+	UpdateList(ctx context.Context, id uint, listData *List) (*List, error)
 }
 
 type ListService interface {
