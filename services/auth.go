@@ -52,7 +52,7 @@ func (s *AuthService) Login(ctx context.Context, loginData *models.AuthCredentia
 
 	claims := jwt.MapClaims{
 		"id":  user.ID,
-		"exp": time.Now().Unix(),
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	token, err := utils.GenerateJWT(claims, jwt.SigningMethodHS256, os.Getenv("JWT_SECRET"))
@@ -96,7 +96,7 @@ func (s *AuthService) Register(ctx context.Context, registerData *models.AuthCre
 
 	claims := jwt.MapClaims{
 		"id":  user.ID,
-		"exp": time.Now().Unix(),
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	token, err := utils.GenerateJWT(claims, jwt.SigningMethodHS256, os.Getenv("JWT_SECRET"))

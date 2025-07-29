@@ -27,7 +27,8 @@ func main() {
 
 	server := app.Group("/api")
 
-	handlers.NewAuthHandler(server.Group("/auth"), authService)
+	authGroup := server.Group("/auth")
+	handlers.NewAuthHandler(authGroup, authService, db)
 
 	privateRoutes := server.Group("/list", middlewares.AuthProtected(db))
 	handlers.NewListHandler(privateRoutes, listService)

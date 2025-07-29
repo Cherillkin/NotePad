@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/Cherillkin/Notepad/middlewares"
 	"github.com/Cherillkin/Notepad/models"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 var validate = validator.New()
@@ -101,16 +104,18 @@ func (h *AuthHandler) Register(ctx *fiber.Ctx) error {
 
 func (h *AuthHandler) Logout(ctx *fiber.Ctx) error {
 	userIDInterface := ctx.Locals("userId")
-	userID, ok := userIDInterface.(float64)
 
+	userID, ok := userIDInterface.(uint)
 	if !ok {
+		fmt.Printf("Invalid userId from Locals: %#v\n", userIDInterface)
+
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Invalid user ID",
 		})
 	}
 
-	err := h.service.Logout(context.Background(), uint(userID))
+	err := h.service.Logout(context.Background(), userID)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
@@ -162,15 +167,18 @@ func (h *AuthHandler) GoogleCallback(ctx *fiber.Ctx) error {
 	})
 }
 
-func NewAuthHandler(router fiber.Router, service models.AuthService) {
+func NewAuthHandler(router fiber.Router, service models.AuthService, db *gorm.DB) {
 	handler := &AuthHandler{
 		service: service,
 	}
 
 	router.Post("/login", handler.Login)
 	router.Post("/register", handler.Register)
-	router.Post("/logout", handler.Logout)
 
 	router.Get("/oauth/google", handler.GoogleLogin)
 	router.Get("/oauth/callback/google", handler.GoogleCallback)
+
+	protected := router.Group("", middlewares.AuthProtected(db))
+	protected.Post("/logout", handler.Logout)
+
 }

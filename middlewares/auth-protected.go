@@ -39,17 +39,20 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 		tokenStr := tokenParts[1]
 		secret := os.Getenv("JWT_SECRET")
 
+		if secret == "" {
+			log.Warnf("JWT_SECRET is empty!")
+		}
+
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 			if token.Method.Alg() != jwt.GetSigningMethod("HS256").Alg() {
 				return nil, fmt.Errorf("unexpted signing methos: %v", token.Header["alg"])
 			}
 
-			return secret, nil
+			return []byte(secret), nil
 		})
 
 		if err != nil || !token.Valid {
-			log.Warnf("invalid token")
-
+			log.Warnf("invalid token: %v", err)
 			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 				"status":  "fail",
 				"message": "Unauthorized",
