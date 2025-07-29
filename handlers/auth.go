@@ -99,6 +99,31 @@ func (h *AuthHandler) Register(ctx *fiber.Ctx) error {
 	})
 }
 
+func (h *AuthHandler) Logout(ctx *fiber.Ctx) error {
+	userIDInterface := ctx.Locals("userId")
+	userID, ok := userIDInterface.(float64)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Invalid user ID",
+		})
+	}
+
+	err := h.service.Logout(context.Background(), uint(userID))
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to logout",
+		})
+	}
+
+	return ctx.JSON(fiber.Map{
+		"status":  "success",
+		"message": "Logged out successfully",
+	})
+}
+
 func (h *AuthHandler) GoogleLogin(ctx *fiber.Ctx) error {
 	state := "secure-random-state"
 	url := h.service.GenerateGoogleOAuthUrl(state)
@@ -144,6 +169,7 @@ func NewAuthHandler(router fiber.Router, service models.AuthService) {
 
 	router.Post("/login", handler.Login)
 	router.Post("/register", handler.Register)
+	router.Post("/logout", handler.Logout)
 
 	router.Get("/oauth/google", handler.GoogleLogin)
 	router.Get("/oauth/callback/google", handler.GoogleCallback)

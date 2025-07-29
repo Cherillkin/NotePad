@@ -107,6 +107,16 @@ func (s *AuthService) Register(ctx context.Context, registerData *models.AuthCre
 	return token, user, nil
 }
 
+func (s *AuthService) Logout(ctx context.Context, userID uint) error {
+	config := config.NewEnvConfig()
+	rdb := redis.NewClient(&redis.Options{
+		Addr: config.RedisAddr,
+		DB:   config.RedisDB,
+	})
+
+	return rdb.Del(ctx, fmt.Sprintf("%d", userID)).Err()
+}
+
 func (s *AuthService) GenerateGoogleOAuthUrl(state string) string {
 	conf := getGoogleOAuthConfig()
 	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline)

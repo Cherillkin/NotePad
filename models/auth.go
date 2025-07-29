@@ -21,6 +21,7 @@ type AuthRepository interface {
 type AuthService interface {
 	Login(ctx context.Context, loginData *AuthCredentials) (string, *User, error)
 	Register(ctx context.Context, registerData *AuthCredentials) (string, *User, error)
+	Logout(ctx context.Context, userID uint) error
 	GenerateGoogleOAuthUrl(state string) string
 	HandleGoogleCallback(ctx context.Context, code string) (string, *User, error)
 }
