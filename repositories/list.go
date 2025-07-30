@@ -21,7 +21,7 @@ func (r *ListRepository) CreateList(ctx context.Context, listData *models.List) 
 
 func (r *ListRepository) GetListsByUserID(ctx context.Context, userID uint) ([]models.List, error) {
 	var lists []models.List
-	if err := r.db.WithContext(ctx).Where("userId = ?", userID).Find(&lists).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&lists).Error; err != nil {
 		return nil, err
 	}
 

@@ -141,9 +141,9 @@ func NewListHandler(router fiber.Router, service models.ListService) {
 		service: service,
 	}
 
-	router.Post("/list", handler.CreateList)
-	router.Get("/lists", handler.GetUserLists)
-	router.Get("/list/:id", handler.GetList)
-	router.Delete("/list/:id", handler.DeleteList)
-	router.Put("/list/:id", handler.UpdateList)
+	router.Post("/", handler.CreateList)
+	router.Get("/", handler.GetUserLists)
+	router.Get("/:id", handler.GetList)
+	router.Delete("/:id", handler.DeleteList)
+	router.Put("/:id", handler.UpdateList)
 }

@@ -6,8 +6,8 @@ import (
 )
 
 type List struct {
-	ID          uint      `json:"id" gorm:"primary key"`
-	Name        string    `json:"name" gorm:"text;not null"`
+	ID          uint      `json:"id" gorm:"primaryKey"`
+	Name        string    `json:"name" gorm:"type:text;not null"`
 	Description string    `json:"description"`
 	UserID      uint      `json:"user_id"`
 	User        User      `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
