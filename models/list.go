@@ -11,6 +11,7 @@ type List struct {
 	Description string    `json:"description"`
 	UserID      uint      `json:"user_id"`
 	User        User      `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Items       []Item    `json:"items" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Created_At  time.Time `json:"created_at"`
 	Updated_At  time.Time `json:"updated_at"`
 }
