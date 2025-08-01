@@ -20,18 +20,23 @@ func main() {
 	})
 
 	listRepository := repositories.NewListRepository(db)
+	itemRepository := repositories.NewItemRepository(db)
 	authRepository := repositories.NewAuthRepository(db)
 
-	authService := services.NewAuthService(authRepository)
 	listService := services.NewListService(listRepository)
+	itemService := services.NewItemService(itemRepository)
+	authService := services.NewAuthService(authRepository)
 
 	server := app.Group("/api")
 
-	authGroup := server.Group("/auth")
-	handlers.NewAuthHandler(authGroup, authService, db)
-
 	privateRoutes := server.Group("/list", middlewares.AuthProtected(db))
 	handlers.NewListHandler(privateRoutes, listService)
+
+	itemRoutes := server.Group("/:listId/item", middlewares.AuthProtected(db), middlewares.SetListIdToLocals)
+	handlers.NewItemHandler(itemRoutes, itemService)
+
+	authGroup := server.Group("/auth")
+	handlers.NewAuthHandler(authGroup, authService, db)
 
 	app.Listen(":8000")
 }

@@ -43,7 +43,7 @@ func (h *ItemHandler) GetListItems(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"status":  "fail",
-			"message": "fail",
+			"message": err.Error(),
 		})
 	}
 
