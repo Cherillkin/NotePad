@@ -6,14 +6,15 @@ import (
 )
 
 type List struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	Name        string    `json:"name" gorm:"type:text;not null"`
-	Description string    `json:"description"`
-	UserID      uint      `json:"user_id"`
-	User        User      `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Items       []Item    `json:"items" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Created_At  time.Time `json:"created_at"`
-	Updated_At  time.Time `json:"updated_at"`
+	ID          uint         `json:"id" gorm:"primaryKey"`
+	Name        string       `json:"name" gorm:"type:text;not null"`
+	Description string       `json:"description"`
+	UserID      uint         `json:"user_id"`
+	User        User         `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Items       []Item       `json:"items" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	SharedWith  []SharedList `json:"-" gorm:"foreignKey:ListID"`
+	Created_At  time.Time    `json:"created_at"`
+	Updated_At  time.Time    `json:"updated_at"`
 }
 
 type ListRepository interface {

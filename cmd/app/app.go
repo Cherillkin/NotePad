@@ -22,10 +22,12 @@ func main() {
 	listRepository := repositories.NewListRepository(db)
 	itemRepository := repositories.NewItemRepository(db)
 	authRepository := repositories.NewAuthRepository(db)
+	sharedListRepository := repositories.NewSharedListRepository(db)
 
 	listService := services.NewListService(listRepository)
 	itemService := services.NewItemService(itemRepository)
 	authService := services.NewAuthService(authRepository)
+	sharedListService := services.NewSharedListService(sharedListRepository)
 
 	server := app.Group("/api")
 
@@ -37,6 +39,8 @@ func main() {
 
 	authGroup := server.Group("/auth")
 	handlers.NewAuthHandler(authGroup, authService, db)
+
+	handlers.NewSharedListHandler(privateRoutes, sharedListService)
 
 	app.Listen(":8000")
 }
