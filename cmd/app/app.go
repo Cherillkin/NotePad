@@ -7,6 +7,7 @@ import (
 	"github.com/Cherillkin/Notepad/middlewares"
 	"github.com/Cherillkin/Notepad/repositories"
 	"github.com/Cherillkin/Notepad/services"
+	"github.com/Cherillkin/Notepad/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,6 +19,9 @@ func main() {
 		AppName:      "NotePad",
 		ServerHeader: "Fiber",
 	})
+
+	producer := utils.NewProducer("localhost:9092", "list_shared")
+	defer producer.Close()
 
 	listRepository := repositories.NewListRepository(db)
 	itemRepository := repositories.NewItemRepository(db)
@@ -40,7 +44,8 @@ func main() {
 	authGroup := server.Group("/auth")
 	handlers.NewAuthHandler(authGroup, authService, db)
 
-	handlers.NewSharedListHandler(privateRoutes, sharedListService)
+	sharedRoutes := server.Group("/shared", middlewares.AuthProtected(db))
+	handlers.NewSharedListHandler(sharedRoutes, sharedListService, producer)
 
 	app.Listen(":8000")
 }
