@@ -55,7 +55,7 @@ func (h *AuthHandler) Login(ctx *fiber.Ctx) error {
 		"message": "Successfully logged in",
 		"data": &fiber.Map{
 			"token": token,
-			"user":  user,
+			"user":  models.LoginUserResponse{ID: user.ID, Email: user.Email},
 		},
 	})
 }

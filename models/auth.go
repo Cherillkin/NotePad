@@ -7,9 +7,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//go:generate mockgen -source=auth.go -destination=mocks/mock.go
+
 type AuthCredentials struct {
 	Email    string `json:"email" validate:"required"`
 	Password string `json:"password" validate:"required"`
+}
+
+type LoginUserResponse struct {
+	ID    uint   `json:"ID"`
+	Email string `json:"Email"`
+}
+
+type RegisterUserResponse struct {
+	ID    uint   `json:"id"`
+	Email string `json:"email"`
 }
 
 type AuthRepository interface {
